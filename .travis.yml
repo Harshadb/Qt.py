@@ -1,6 +1,25 @@
 matrix:
   include:
 
+  # VFX Platform 2018
+  - os: linux
+    env:
+    - VFXPLATFORM=2018
+    - PYTHON=2.7
+    - RELEASE=true
+  - os: linux
+    env:
+    - VFXPLATFORM=2018
+    - PYTHON=3.4
+  - os: linux
+    env:
+    - VFXPLATFORM=2018
+    - PYTHON=3.5
+  - os: linux
+    env:
+    - VFXPLATFORM=2018
+    - PYTHON=3.6
+
   # VFX Platform 2017
   - os: linux
     env:
@@ -35,4 +54,4 @@ deploy:
   on:
     tags: true
     repo: mottosso/Qt.py
-    python: 2.7
+    condition: $RELEASE = true
