@@ -1,7 +1,8 @@
 <img width=260 src=logo.svg>
 
-[![Build Status](https://travis-ci.org/mottosso/Qt.py.svg?branch=master)](https://travis-ci.org/mottosso/Qt.py) [![PyPI version](https://badge.fury.io/py/Qt.py.svg)](https://pypi.python.org/pypi/Qt.py)
+[![Downloads](https://pepy.tech/badge/qt-py)](https://pepy.tech/project/qt-py) [![Build Status](https://travis-ci.org/mottosso/Qt.py.svg?branch=master)](https://travis-ci.org/mottosso/Qt.py) [![PyPI version](https://badge.fury.io/py/Qt.py.svg)](https://pypi.python.org/pypi/Qt.py)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/qt.py/badges/version.svg)](https://anaconda.org/conda-forge/qt.py) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Qt-py/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 
 Qt.py enables you to write software that runs on any of the 4 supported bindings - PySide2, PyQt5, PySide and PyQt4.
 
@@ -11,6 +12,7 @@ Qt.py enables you to write software that runs on any of the 4 supported bindings
 
 | Date     | Version   | Event
 |:---------|:----------|:----------
+| Jun 2019 | [1.2.1][] | Bugfixes and [additional members](https://github.com/mottosso/Qt.py/releases/tag/1.2.0)
 | Jan 2018 | [1.1.0][] | Adds new test suite, new members
 | Mar 2017 | [1.0.0][] | Increased safety, **backwards incompatible**
 | Sep 2016 | [0.6.9][] | Stable release
@@ -24,6 +26,7 @@ Qt.py enables you to write software that runs on any of the 4 supported bindings
 [0.6.9]: https://github.com/mottosso/Qt.py/releases/tag/0.6.9
 [1.0.0]: https://github.com/mottosso/Qt.py/releases/tag/1.0.0
 [1.1.0]: https://github.com/mottosso/Qt.py/releases/tag/1.1.0
+[1.2.1]: https://github.com/mottosso/Qt.py/releases/tag/1.2.1
 
 ##### Guides
 
@@ -150,6 +153,8 @@ Qt.py also provides compatibility wrappers for critical functionality that diffe
 | `translate(...)`        					| `function`  | Compatibility wrapper around [QCoreApplication.translate][]
 | `wrapInstance(addr=long, type=QObject)`   | `QObject`   | Wrapper around `shiboken2.wrapInstance` and PyQt equivalent
 | `getCppPointer(object=QObject)`           | `long`      | Wrapper around `shiboken2.getCppPointer` and PyQt equivalent
+| `isValid(object=QObject)`                 | `bool`      | Wrapper around `shiboken2.isValid` and PyQt equivalent
+| `dataChanged(topLeft=QModelIndex, bottomRight=QModelIndex, roles=[])` | `None` | Wrapper around `QtCore.QAbstractItemModel.dataChanged.emit`
 
 [QCoreApplication.translate]: https://doc.qt.io/qt-5/qcoreapplication.html#translate
 
@@ -388,10 +393,12 @@ Send us a pull-request with your studio here.
 - [Colorbleed](http://www.colorbleed.nl/)
 - [Digital Domain](https://www.digitaldomain.com/)
 - [Disney Animation](https://www.disneyanimation.com/)
+- [Dreamworks Animation](https://github.com/dreamworksanimation)
 - [Epic Games](https://www.epicgames.com/)
 - [Fido](http://fido.se/)
 - [Framestore](https://framestore.com)
 - [ftrack](https://www.ftrack.com/)
+- [Futureworks](http://futureworks.in/)
 - [Industrial Brothers](http://industrialbrothers.com/)
 - [Industriromantik](http://www.industriromantik.se/)
 - [Mackevision](http://www.mackevision.com/)
@@ -401,6 +408,7 @@ Send us a pull-request with your studio here.
 - [MPC](http://www.moving-picture.com)
 - [Overmind Studios](https://www.overmind-studios.de/)
 - [Psyop](http://www.psyop.com/)
+- [Raynault VFX](https://www.raynault.com/)
 - [Rising Sun Pictures](https://rsp.com.au)
 - [Rodeo FX](https://www.rodeofx.com/en/)
 - [Sony Pictures Imageworks](http://www.imageworks.com/)
@@ -419,6 +427,7 @@ Presented at Siggraph 2016, BOF!
 
 Send us a pull-request with your project here.
 
+- [USD Manager](http://www.usdmanager.org)
 - [Cosmos](http://cosmos.toolsfrom.space/)
 - [maya-capture-gui](https://github.com/BigRoy/maya-capture-gui)
 - [pyblish-lite](https://github.com/pyblish/pyblish-lite)
@@ -430,6 +439,7 @@ Send us a pull-request with your project here.
 - [AFANASY](http://cgru.info/afanasy/afanasy)
 - [Syncplay](https://github.com/Syncplay/syncplay)
 - [BlenderUpdater](https://github.com/overmindstudios/BlenderUpdater)
+- [QtPyConvert](https://github.com/DigitalDomain/QtPyConvert)
 
 <br>
 <br>
@@ -446,6 +456,7 @@ Comparison matrix.
 | [QtPy][]      | Scientific    | N/A               | MIT       |      | X         | X      |
 | [pyqode.qt][] | Scientific    | PyQt5             | MIT       | X    |           | X      |
 | [QtExt][]     | Film          | N/A               | N/A       |      | X         |        |
+| [python_qt_binding][] | Robotics | N/A            | BSD       | X    | X        | X       | X
 
 Also worth mentioning, [pyqt4topyqt5](https://github.com/rferrazz/pyqt4topyqt5); a good starting point for transitioning to Qt.py.
 
@@ -455,6 +466,7 @@ Send us a pull-request with your project here.
 [jupyter]: https://github.com/jupyter/qtconsole/blob/master/qtconsole/qt_loaders.py
 [pyqode.qt]: https://github.com/pyQode/pyqode.qt
 [QtExt]: https://bitbucket.org/ftrack/qtext
+[python_qt_binding]: https://github.com/ros-visualization/python_qt_binding
 
 <br>
 <br>

@@ -41,9 +41,10 @@ import os
 import sys
 import types
 import shutil
+import importlib
 
 
-__version__ = "1.2.0.b2"
+__version__ = "1.2.1"
 
 # Enable support for `from Qt import *`
 __all__ = []
@@ -777,6 +778,32 @@ def _wrapinstance(ptr, base=None):
     return func(long(ptr), base)
 
 
+def _isvalid(object):
+    """Check if the object is valid to use in Python runtime.
+
+    Usage:
+        See :func:`QtCompat.isValid()`
+
+    Arguments:
+        object (QObject): QObject to check the validity of.
+
+    """
+
+    assert isinstance(object, Qt.QtCore.QObject)
+
+    if hasattr(Qt, "_shiboken2"):
+        return getattr(Qt, "_shiboken2").isValid(object)
+
+    elif hasattr(Qt, "_shiboken"):
+        return getattr(Qt, "_shiboken").isValid(object)
+
+    elif hasattr(Qt, "_sip"):
+        return not getattr(Qt, "_sip").isdeleted(object)
+
+    else:
+        raise AttributeError("'module' has no attribute isValid")
+
+
 def _translate(context, sourceText, *args):
     # In Qt4 bindings, translate can be passed 2 or 3 arguments
     # In Qt5 bindings, translate can be passed 2 arguments
@@ -851,6 +878,41 @@ def _loadUi(uifile, baseinstance=None):
             def __init__(self, baseinstance):
                 super(_UiLoader, self).__init__(baseinstance)
                 self.baseinstance = baseinstance
+                self.custom_widgets = {}
+
+            def _loadCustomWidgets(self, etree):
+                """
+                Workaround to pyside-77 bug.
+
+                From QUiLoader doc we should use registerCustomWidget method.
+                But this causes a segfault on some platforms.
+
+                Instead we fetch from customwidgets DOM node the python class
+                objects. Then we can directly use them in createWidget method.
+                """
+
+                def headerToModule(header):
+                    """
+                    Translate a header file to python module path
+                    foo/bar.h => foo.bar
+                    """
+                    # Remove header extension
+                    module = os.path.splitext(header)[0]
+
+                    # Replace os separator by python module separator
+                    return module.replace("/", ".").replace("\\", ".")
+
+                custom_widgets = etree.find("customwidgets")
+
+                if custom_widgets is None:
+                    return
+
+                for custom_widget in custom_widgets:
+                    class_name = custom_widget.find("class").text
+                    header = custom_widget.find("header").text
+                    module = importlib.import_module(headerToModule(header))
+                    self.custom_widgets[class_name] = getattr(module,
+                                                              class_name)
 
             def load(self, uifile, *args, **kwargs):
                 from xml.etree.ElementTree import ElementTree
@@ -860,6 +922,7 @@ def _loadUi(uifile, baseinstance=None):
                 # a RuntimeError.
                 etree = ElementTree()
                 etree.parse(uifile)
+                self._loadCustomWidgets(etree)
 
                 widget = Qt._QtUiTools.QUiLoader.load(
                     self, uifile, *args, **kwargs)
@@ -889,7 +952,8 @@ def _loadUi(uifile, baseinstance=None):
                                                                   class_name,
                                                                   parent,
                                                                   name)
-
+                elif class_name in self.custom_widgets:
+                    widget = self.custom_widgets[class_name](parent)
                 else:
                     raise Exception("Custom widget '%s' not supported"
                                     % class_name)
@@ -917,6 +981,7 @@ These members from the original submodule are misplaced relative PySide2
 """
 _misplaced_members = {
     "PySide2": {
+        "QtCore.QStringListModel": "QtCore.QStringListModel",
         "QtGui.QStringListModel": "QtCore.QStringListModel",
         "QtCore.Property": "QtCore.Property",
         "QtCore.Signal": "QtCore.Signal",
@@ -929,6 +994,7 @@ _misplaced_members = {
         "QtUiTools.QUiLoader": ["QtCompat.loadUi", _loadUi],
         "shiboken2.wrapInstance": ["QtCompat.wrapInstance", _wrapinstance],
         "shiboken2.getCppPointer": ["QtCompat.getCppPointer", _getcpppointer],
+        "shiboken2.isValid": ["QtCompat.isValid", _isvalid],
         "QtWidgets.qApp": "QtWidgets.QApplication.instance()",
         "QtCore.QCoreApplication.translate": [
             "QtCompat.translate", _translate
@@ -953,6 +1019,7 @@ _misplaced_members = {
         "uic.loadUi": ["QtCompat.loadUi", _loadUi],
         "sip.wrapinstance": ["QtCompat.wrapInstance", _wrapinstance],
         "sip.unwrapinstance": ["QtCompat.getCppPointer", _getcpppointer],
+        "sip.isdeleted": ["QtCompat.isValid", _isvalid],
         "QtWidgets.qApp": "QtWidgets.QApplication.instance()",
         "QtCore.QCoreApplication.translate": [
             "QtCompat.translate", _translate
@@ -985,6 +1052,7 @@ _misplaced_members = {
         "QtUiTools.QUiLoader": ["QtCompat.loadUi", _loadUi],
         "shiboken.wrapInstance": ["QtCompat.wrapInstance", _wrapinstance],
         "shiboken.unwrapInstance": ["QtCompat.getCppPointer", _getcpppointer],
+        "shiboken.isValid": ["QtCompat.isValid", _isvalid],
         "QtGui.qApp": "QtWidgets.QApplication.instance()",
         "QtCore.QCoreApplication.translate": [
             "QtCompat.translate", _translate
@@ -1018,6 +1086,7 @@ _misplaced_members = {
         "uic.loadUi": ["QtCompat.loadUi", _loadUi],
         "sip.wrapinstance": ["QtCompat.wrapInstance", _wrapinstance],
         "sip.unwrapinstance": ["QtCompat.getCppPointer", _getcpppointer],
+        "sip.isdeleted": ["QtCompat.isValid", _isvalid],
         "QtCore.QString": "str",
         "QtGui.qApp": "QtWidgets.QApplication.instance()",
         "QtCore.QCoreApplication.translate": [
@@ -1352,6 +1421,10 @@ def _pyside2():
 
     if hasattr(Qt, "_QtCore"):
         Qt.__qt_version__ = Qt._QtCore.qVersion()
+        Qt.QtCompat.dataChanged = (
+            lambda self, topleft, bottomright, roles=None:
+            self.dataChanged.emit(topleft, bottomright, roles or [])
+        )
 
     if hasattr(Qt, "_QtWidgets"):
         Qt.QtCompat.setSectionResizeMode = \
@@ -1399,6 +1472,10 @@ def _pyside():
 
     if hasattr(Qt, "_QtCore"):
         Qt.__qt_version__ = Qt._QtCore.qVersion()
+        Qt.QtCompat.dataChanged = (
+            lambda self, topleft, bottomright, roles=None:
+            self.dataChanged.emit(topleft, bottomright)
+        )
 
     _reassign_misplaced_members("PySide")
     _build_compatibility_members("PySide")
@@ -1409,11 +1486,18 @@ def _pyqt5():
 
     import PyQt5 as module
     extras = ["uic"]
+
     try:
         import sip
-        extras.append(sip.__name__)
+        extras += ["sip"]
     except ImportError:
-        sip = None
+
+        # Relevant to PyQt5 5.11 and above
+        try:
+            from PyQt5 import sip
+            extras += ["sip"]
+        except ImportError:
+            sip = None
 
     _setup(module, extras)
     if hasattr(Qt, "_sip"):
@@ -1427,6 +1511,10 @@ def _pyqt5():
     if hasattr(Qt, "_QtCore"):
         Qt.__binding_version__ = Qt._QtCore.PYQT_VERSION_STR
         Qt.__qt_version__ = Qt._QtCore.QT_VERSION_STR
+        Qt.QtCompat.dataChanged = (
+            lambda self, topleft, bottomright, roles=None:
+            self.dataChanged.emit(topleft, bottomright, roles or [])
+        )
 
     if hasattr(Qt, "_QtWidgets"):
         Qt.QtCompat.setSectionResizeMode = \
@@ -1503,6 +1591,10 @@ def _pyqt4():
     if hasattr(Qt, "_QtCore"):
         Qt.__binding_version__ = Qt._QtCore.PYQT_VERSION_STR
         Qt.__qt_version__ = Qt._QtCore.QT_VERSION_STR
+        Qt.QtCompat.dataChanged = (
+            lambda self, topleft, bottomright, roles=None:
+            self.dataChanged.emit(topleft, bottomright)
+        )
 
     _reassign_misplaced_members("PyQt4")
 
