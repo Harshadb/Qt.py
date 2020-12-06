@@ -1,1 +1,1 @@
-from Qt import QtCore, QtGui, QtWidgets, QtCompat, Qt
+from Qt import QtCore, QtGui, QtWidgets, QtCompat, Qt, QtSvg
