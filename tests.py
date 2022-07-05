@@ -1,3 +1,4 @@
+# coding=utf-8
 """Tests that run once"""
 import io
 import os
@@ -891,6 +892,19 @@ def test_missing():
     )
 
 
+def test_unicode_error_messages():
+    """Test if unicode error messages with non-ascii characters
+    throw the error reporter off"""
+    import Qt
+    unicode_message = u"DLL load failed : le module spécifié est introuvable."
+    str_message = "DLL load failed : le module"
+
+    with captured_output() as out:
+        stdout, stderr = out
+        Qt._warn(text=unicode_message)
+        assert str_message in stderr.getvalue()
+
+
 if sys.version_info < (3, 5):
     # PySide is not available for Python > 3.4
     # Shiboken(1) doesn't support Python 3.5
@@ -1037,11 +1051,24 @@ if sys.version_info < (3, 5):
 
     def test_isValid():
         """.isValid and .delete work in all bindings"""
-        from Qt import QtCompat, QtCore
-        obj = QtCore.QObject()
-        assert QtCompat.isValid(obj)
-        QtCompat.delete(obj)
-        assert not QtCompat.isValid(obj)
+        from Qt import QtCompat, QtCore, QtWidgets
+
+        app = QtWidgets.QApplication(sys.argv)
+
+        try:
+            obj = QtCore.QObject()
+            assert QtCompat.isValid(obj)
+            QtCompat.delete(obj)
+            assert not QtCompat.isValid(obj)
+
+            # Graphics Item
+            item = QtWidgets.QGraphicsItemGroup()
+            assert QtCompat.isValid(item)
+            QtCompat.delete(item)
+            assert not QtCompat.isValid(item)
+
+        finally:
+            app.exit()
 
 
 if binding("PyQt4"):
