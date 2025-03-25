@@ -35,7 +35,7 @@ Qt.py enables you to write software that runs on any of the 4 supported bindings
 [1.2.1]: https://github.com/mottosso/Qt.py/releases/tag/1.2.1
 [1.3.0]: https://github.com/mottosso/Qt.py/releases/tag/1.3.0
 [1.3.9]: https://github.com/mottosso/Qt.py/releases/tag/1.3.9
-[1.4.0]: https://github.com/mottosso/Qt.py/releases/tag/1.4.1
+[1.4.1]: https://github.com/mottosso/Qt.py/releases/tag/1.4.1
 
 ##### Guides
 
@@ -445,6 +445,7 @@ Send us a pull-request with your studio here.
 - [Sony Pictures Imageworks](http://www.imageworks.com/)
 - [Spin VFX](http://www.spinvfx.com/)
 - [Weta Digital](https://www.wetafx.co.nz/)
+- [GermanTechJobs](https://germantechjobs.de)
 
 Presented at Siggraph 2016, BOF!
 
@@ -605,7 +606,7 @@ python -m twine upload .\dist\*
 | `QFont().setWeight(...)` | `QtCompat.QFont.setWeight(font, ...)`
 | `QFont().setWeight(QFont().Bold)` | `QFont().setWeight(QFont.Bold)` | Instance of class doesn't have the enums, apparently
 | `QEvent().Resize` | `QEvent.Resize` | Instance of class doesn't have the enums, seems to apply overall
-| `QtCore.Qt.MidButton`  | `QtCompat.QtCore.Qt.MidButton`
+| `QtCore.Qt.MidButton`  | `QtCompat.Qt.MidButton`
 | `QLabel.setPixmap(str)` | `QLabel.setPixmap(QPixmap())` | Can't take a string anymore (tested in Maya 2025.0)
 | `QModelIndex.child` | `QModel.index` | This one is apparently from Qt 4 and should not have been in Qt.py to begin with
 | | Submit your known issues here! |
